@@ -12,31 +12,29 @@ export type RankingState =
       tier: "liked" | "disliked";
       lo: number;
       hi: number;
-      tieredRecipes: Recipe[]; // snapshot of the tier at the moment ranking began
+      tieredRecipes: Recipe[];
     };
 
 export function useRankingFlow(
   onComplete: (
     pending: PendingRecipe,
     tier: "liked" | "disliked",
-    position: number
+    position: number,
+    tieWithId?: string
   ) => void
 ) {
   const [state, setState] = useState<RankingState>({ phase: "idle" });
 
-  // Called when the form is submitted
   const start = (pending: PendingRecipe) =>
     setState({ phase: "choosing-tier", pending });
 
-  // Called when the user picks liked/disliked
   const chooseTier = (
     tier: "liked" | "disliked",
-    tieredRecipes: Recipe[] // current sorted recipes in that tier
+    tieredRecipes: Recipe[]
   ) => {
     if (state.phase !== "choosing-tier") return;
 
     if (tieredRecipes.length === 0) {
-      // No comparisons needed — first recipe in this tier
       onComplete(state.pending, tier, 0);
       setState({ phase: "idle" });
       return;
@@ -52,7 +50,6 @@ export function useRankingFlow(
     });
   };
 
-  // Called when the user picks "this new recipe" or "the existing one"
   const pick = (preferNew: boolean) => {
     if (state.phase !== "comparing") return;
     const { lo, hi, tieredRecipes, pending, tier } = state;
@@ -69,19 +66,26 @@ export function useRankingFlow(
     }
   };
 
+  // User declares a tie with the current comparison recipe
+  const pickTie = () => {
+    if (state.phase !== "comparing") return;
+    const { lo, hi, tieredRecipes, pending, tier } = state;
+    const mid = Math.floor((lo + hi) / 2);
+    onComplete(pending, tier, mid, tieredRecipes[mid].id);
+    setState({ phase: "idle" });
+  };
+
   const cancel = () => setState({ phase: "idle" });
 
-  // The recipe the new one is being compared against right now
   const currentComparison =
     state.phase === "comparing"
       ? state.tieredRecipes[Math.floor((state.lo + state.hi) / 2)]
       : null;
 
-  // Upper bound on remaining comparisons — useful for a progress hint
   const comparisonsLeft =
     state.phase === "comparing"
       ? Math.ceil(Math.log2(state.hi - state.lo + 1))
       : 0;
 
-  return { state, start, chooseTier, pick, cancel, currentComparison, comparisonsLeft };
+  return { state, start, chooseTier, pick, pickTie, cancel, currentComparison, comparisonsLeft };
 }

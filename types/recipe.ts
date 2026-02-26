@@ -14,11 +14,9 @@ export type PendingRecipe = Omit<Recipe, "id" | "tier" | "rankInTier" | "rating"
 
 export const CATEGORIES = [
   "Breakfast",
-  "Lunch",
-  "Dinner",
+  "Lunch/Dinner",
   "Dessert",
-  "Snack",
-  "Other",
+  "Drinks",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];

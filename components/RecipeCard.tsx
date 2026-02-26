@@ -15,12 +15,10 @@ function ratingBg(rating: number): string {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Breakfast: "bg-yellow-100 text-yellow-700",
-  Lunch: "bg-lime-100 text-lime-700",
-  Dinner: "bg-blue-100 text-blue-700",
-  Dessert: "bg-pink-100 text-pink-700",
-  Snack: "bg-orange-100 text-orange-700",
-  Other: "bg-gray-100 text-gray-600",
+  "Breakfast":    "bg-amber-100 text-amber-700",
+  "Lunch/Dinner": "bg-sky-100 text-sky-700",
+  "Dessert":      "bg-pink-100 text-pink-700",
+  "Drinks":       "bg-violet-100 text-violet-700",
 };
 
 function safeHostname(url: string): string {
@@ -37,75 +35,64 @@ export default function RecipeCard({ recipe, rank, onDelete }: Props) {
     recipe.source.startsWith("https://");
 
   const catColor =
-    CATEGORY_COLORS[recipe.category] ?? "bg-gray-100 text-gray-600";
+    CATEGORY_COLORS[recipe.category] ?? "bg-stone-100 text-stone-500";
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4">
-      {/* Rank number */}
-      <span className="text-2xl font-bold text-gray-200 w-7 text-center shrink-0 select-none">
+    <div className="bg-white rounded-2xl border border-stone-100 p-4 flex items-center gap-3 group">
+      {/* Rank */}
+      <span className="text-lg font-bold text-stone-200 w-6 text-center shrink-0 select-none">
         {rank}
       </span>
 
-      {/* Recipe info */}
+      {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-gray-900 truncate">{recipe.name}</p>
+        <p className="font-semibold text-stone-900 truncate leading-snug">
+          {recipe.name}
+        </p>
 
-        {(recipe.author || recipe.source) && (
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {recipe.author && (
-              <span className="text-xs text-gray-500">{recipe.author}</span>
-            )}
-            {recipe.author && recipe.source && (
-              <span className="text-gray-300 text-xs">·</span>
-            )}
-            {recipe.source &&
-              (isUrl ? (
-                <a
-                  href={recipe.source}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-500 hover:underline truncate max-w-[160px]"
-                >
-                  {safeHostname(recipe.source)}
-                </a>
-              ) : (
-                <span className="text-xs text-gray-500 truncate">
-                  {recipe.source}
-                </span>
-              ))}
-          </div>
-        )}
-
-        <div className="flex items-center gap-2 mt-2">
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}
-          >
-            {recipe.category}
-          </span>
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              recipe.tier === "liked"
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-rose-50 text-rose-500"
-            }`}
-          >
-            {recipe.tier === "liked" ? "Liked" : "Disliked"}
-          </span>
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          {recipe.author && (
+            <span className="text-xs text-stone-400">{recipe.author}</span>
+          )}
+          {recipe.author && recipe.source && (
+            <span className="text-stone-200 text-xs">·</span>
+          )}
+          {recipe.source &&
+            (isUrl ? (
+              <a
+                href={recipe.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-400 hover:underline truncate max-w-[140px]"
+              >
+                {safeHostname(recipe.source)}
+              </a>
+            ) : (
+              <span className="text-xs text-stone-400 truncate">
+                {recipe.source}
+              </span>
+            ))}
         </div>
+
+        <span
+          className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}
+        >
+          {recipe.category}
+        </span>
       </div>
 
-      {/* Rating badge — display only, computed automatically */}
+      {/* Score badge */}
       <div
-        className={`w-11 h-11 rounded-full ${ratingBg(recipe.rating)} text-white font-bold text-base flex items-center justify-center shrink-0`}
+        className={`w-11 h-11 rounded-full ${ratingBg(recipe.rating)} text-white font-bold text-base flex items-center justify-center shrink-0 shadow-sm`}
       >
         {recipe.rating}
       </div>
 
-      {/* Delete */}
+      {/* Delete — always visible but subtle */}
       <button
         onClick={() => onDelete(recipe.id)}
-        title="Remove recipe"
-        className="text-gray-300 hover:text-rose-400 transition-colors text-2xl leading-none shrink-0"
+        title="Remove"
+        className="text-stone-200 hover:text-rose-400 transition-colors text-xl leading-none shrink-0"
       >
         ×
       </button>

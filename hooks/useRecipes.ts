@@ -5,9 +5,6 @@ import { Recipe } from "@/types/recipe";
 
 const STORAGE_KEY = "recipe-ranker";
 
-// Evenly distribute scores within each tier after any add/delete.
-// liked tier: 10 (best) → 6 (worst)
-// disliked tier: 5 (best) → 1 (worst)
 function recalculateScores(recipes: Recipe[]): Recipe[] {
   const score = (group: Recipe[], max: number, min: number): Recipe[] =>
     group.map((r, i) => ({
@@ -29,7 +26,6 @@ function recalculateScores(recipes: Recipe[]): Recipe[] {
   return [...score(liked, 10, 6), ...score(disliked, 5, 1)];
 }
 
-// Type guard to reject old schema entries that lack tier/rankInTier
 function isValidRecipe(r: unknown): r is Recipe {
   return (
     typeof r === "object" &&
@@ -63,12 +59,14 @@ export function useRecipes() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
   }, [recipes, mounted]);
 
-  // Insert a recipe at `position` within its tier, then recalculate all scores.
   const addRecipe = (
     data: Omit<Recipe, "id" | "rankInTier" | "rating">,
-    position: number
+    position: number,
+    tieWithId?: string
   ) => {
     setRecipes((prev) => {
+      const newId = crypto.randomUUID();
+
       const shifted = prev.map((r) =>
         r.tier === data.tier && r.rankInTier >= position
           ? { ...r, rankInTier: r.rankInTier + 1 }
@@ -76,11 +74,26 @@ export function useRecipes() {
       );
       const newRecipe: Recipe = {
         ...data,
-        id: crypto.randomUUID(),
+        id: newId,
         rankInTier: position,
-        rating: 0, // placeholder; recalculateScores overwrites this
+        rating: 0,
       };
-      return recalculateScores([...shifted, newRecipe]);
+
+      let result = recalculateScores([...shifted, newRecipe]);
+
+      // If tied, average the scores of both recipes so they match
+      if (tieWithId) {
+        const newR = result.find((r) => r.id === newId);
+        const tiedR = result.find((r) => r.id === tieWithId);
+        if (newR && tiedR) {
+          const avg = parseFloat(((newR.rating + tiedR.rating) / 2).toFixed(1));
+          result = result.map((r) =>
+            r.id === newId || r.id === tieWithId ? { ...r, rating: avg } : r
+          );
+        }
+      }
+
+      return result;
     });
   };
 
@@ -99,7 +112,6 @@ export function useRecipes() {
     });
   };
 
-  // Sorted best→worst within a tier — passed to the ranking flow for comparisons
   const getTieredRecipes = (tier: "liked" | "disliked") =>
     recipes
       .filter((r) => r.tier === tier)
