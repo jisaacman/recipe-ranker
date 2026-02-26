@@ -7,10 +7,12 @@ export interface Recipe {
   tier: "liked" | "disliked";
   rankInTier: number; // 0-indexed within tier (0 = best in tier)
   rating: number;     // computed score: liked → 6–10, disliked → 1–5
+  notes: string;
+  timesMade: number;
 }
 
-// Fields the user fills in before ranking begins
-export type PendingRecipe = Omit<Recipe, "id" | "tier" | "rankInTier" | "rating">;
+// Only the fields the user fills in before ranking — excludes all computed/post-ranking fields
+export type PendingRecipe = Pick<Recipe, "name" | "author" | "source" | "category">;
 
 export const CATEGORIES = [
   "Breakfast",

@@ -1,22 +1,45 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { useRecipes } from "@/hooks/useRecipes";
 import { useRankingFlow } from "@/hooks/useRankingFlow";
-import { PendingRecipe } from "@/types/recipe";
+import { PendingRecipe, Recipe } from "@/types/recipe";
 import RecipeForm from "@/components/RecipeForm";
 import RecipeList from "@/components/RecipeList";
 import RankingFlow from "@/components/RankingFlow";
+import RecipeDetail from "@/components/RecipeDetail";
 
 export default function Home() {
-  const { recipes, addRecipe, deleteRecipe, getTieredRecipes, mounted } =
+  const { recipes, addRecipe, updateRecipe, deleteRecipe, getTieredRecipes, mounted } =
     useRecipes();
+
+  // Re-rank context: preserves the original ID, notes, and timesMade across the ranking flow
+  const rerankContextRef = useRef<{ id: string; notes: string; timesMade: number } | null>(null);
 
   const { state, start, chooseTier, pick, pickTie, cancel, currentComparison, comparisonsLeft } =
     useRankingFlow(
       (pending: PendingRecipe, tier: "liked" | "disliked", position: number, tieWithId?: string) => {
-        addRecipe({ ...pending, tier }, position, tieWithId);
+        const ctx = rerankContextRef.current;
+        addRecipe(
+          { ...pending, tier, notes: ctx?.notes ?? "", timesMade: ctx?.timesMade ?? 0 },
+          position,
+          tieWithId,
+          ctx?.id
+        );
+        rerankContextRef.current = null;
       }
     );
+
+  // Detail modal
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedRecipe = recipes.find((r) => r.id === selectedId) ?? null;
+
+  const handleRerank = (recipe: Recipe) => {
+    setSelectedId(null);
+    rerankContextRef.current = { id: recipe.id, notes: recipe.notes, timesMade: recipe.timesMade };
+    deleteRecipe(recipe.id);
+    start({ name: recipe.name, author: recipe.author, source: recipe.source, category: recipe.category });
+  };
 
   const likedCount = recipes.filter((r) => r.tier === "liked").length;
   const dislikedCount = recipes.filter((r) => r.tier === "disliked").length;
@@ -64,7 +87,11 @@ export default function Home() {
 
         {/* Ranked list */}
         {mounted && (
-          <RecipeList recipes={recipes} onDelete={deleteRecipe} />
+          <RecipeList
+            recipes={recipes}
+            onSelect={(recipe) => setSelectedId(recipe.id)}
+            onDelete={deleteRecipe}
+          />
         )}
       </div>
 
@@ -78,6 +105,17 @@ export default function Home() {
         onPickTie={pickTie}
         onCancel={cancel}
       />
+
+      {/* Recipe detail / edit modal */}
+      {selectedRecipe && (
+        <RecipeDetail
+          recipe={selectedRecipe}
+          onSave={updateRecipe}
+          onRerank={handleRerank}
+          onDelete={deleteRecipe}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </main>
   );
 }

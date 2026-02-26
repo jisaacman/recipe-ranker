@@ -6,6 +6,7 @@ import RecipeCard from "@/components/RecipeCard";
 
 interface Props {
   recipes: Recipe[];
+  onSelect: (recipe: Recipe) => void;
   onDelete: (id: string) => void;
 }
 
@@ -13,7 +14,7 @@ const ALL = "All";
 const TABS = [ALL, ...CATEGORIES] as const;
 type Tab = (typeof TABS)[number];
 
-export default function RecipeList({ recipes, onDelete }: Props) {
+export default function RecipeList({ recipes, onSelect, onDelete }: Props) {
   const [filter, setFilter] = useState<Tab>(ALL);
 
   const filtered =
@@ -46,7 +47,9 @@ export default function RecipeList({ recipes, onDelete }: Props) {
                 {count > 0 && (
                   <span
                     className={`text-xs rounded-full px-1.5 py-0.5 ${
-                      active ? "bg-white/20 text-white" : "bg-stone-100 text-stone-400"
+                      active
+                        ? "bg-white/20 text-white"
+                        : "bg-stone-100 text-stone-400"
                     }`}
                   >
                     {count}
@@ -74,6 +77,7 @@ export default function RecipeList({ recipes, onDelete }: Props) {
               <RecipeCard
                 recipe={recipe}
                 rank={index + 1}
+                onSelect={onSelect}
                 onDelete={onDelete}
               />
             </li>

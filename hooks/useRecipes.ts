@@ -26,16 +26,39 @@ function recalculateScores(recipes: Recipe[]): Recipe[] {
   return [...score(liked, 10, 6), ...score(disliked, 5, 1)];
 }
 
-function isValidRecipe(r: unknown): r is Recipe {
-  return (
-    typeof r === "object" &&
-    r !== null &&
-    "tier" in r &&
-    (r.tier === "liked" || r.tier === "disliked") &&
-    "rankInTier" in r &&
-    typeof (r as Recipe).rankInTier === "number"
-  );
+// Normalizes a raw parsed value into a Recipe, filling in defaults for any missing fields.
+// Returns null if the value is fundamentally invalid (missing tier/rankInTier).
+function normalizeRecipe(r: unknown): Recipe | null {
+  if (
+    typeof r !== "object" ||
+    r === null ||
+    !("tier" in r) ||
+    !((r as { tier: unknown }).tier === "liked" || (r as { tier: unknown }).tier === "disliked") ||
+    !("rankInTier" in r) ||
+    typeof (r as { rankInTier: unknown }).rankInTier !== "number"
+  ) {
+    return null;
+  }
+
+  const raw = r as Partial<Recipe> & { tier: "liked" | "disliked"; rankInTier: number };
+  return {
+    id: raw.id ?? crypto.randomUUID(),
+    name: raw.name ?? "",
+    author: raw.author ?? "",
+    source: raw.source ?? "",
+    category: raw.category ?? "Lunch/Dinner",
+    tier: raw.tier,
+    rankInTier: raw.rankInTier,
+    rating: raw.rating ?? 0,
+    notes: raw.notes ?? "",
+    timesMade: raw.timesMade ?? 0,
+  };
 }
+
+type AddRecipeData = Pick<
+  Recipe,
+  "name" | "author" | "source" | "category" | "tier" | "notes" | "timesMade"
+>;
 
 export function useRecipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -46,7 +69,7 @@ export function useRecipes() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed: unknown[] = JSON.parse(raw);
-        setRecipes(parsed.filter(isValidRecipe));
+        setRecipes(parsed.map(normalizeRecipe).filter((r): r is Recipe => r !== null));
       }
     } catch {
       // ignore corrupt data
@@ -60,12 +83,13 @@ export function useRecipes() {
   }, [recipes, mounted]);
 
   const addRecipe = (
-    data: Omit<Recipe, "id" | "rankInTier" | "rating">,
+    data: AddRecipeData,
     position: number,
-    tieWithId?: string
+    tieWithId?: string,
+    existingId?: string  // provided when re-ranking to preserve the original ID
   ) => {
     setRecipes((prev) => {
-      const newId = crypto.randomUUID();
+      const newId = existingId ?? crypto.randomUUID();
 
       const shifted = prev.map((r) =>
         r.tier === data.tier && r.rankInTier >= position
@@ -81,7 +105,6 @@ export function useRecipes() {
 
       let result = recalculateScores([...shifted, newRecipe]);
 
-      // If tied, average the scores of both recipes so they match
       if (tieWithId) {
         const newR = result.find((r) => r.id === newId);
         const tiedR = result.find((r) => r.id === tieWithId);
@@ -95,6 +118,14 @@ export function useRecipes() {
 
       return result;
     });
+  };
+
+  // Edit notes, times made, or category without affecting ranking
+  const updateRecipe = (
+    id: string,
+    updates: Partial<Pick<Recipe, "notes" | "timesMade" | "category">>
+  ) => {
+    setRecipes((prev) => prev.map((r) => (r.id === id ? { ...r, ...updates } : r)));
   };
 
   const deleteRecipe = (id: string) => {
@@ -119,5 +150,5 @@ export function useRecipes() {
 
   const sortedRecipes = [...recipes].sort((a, b) => b.rating - a.rating);
 
-  return { recipes: sortedRecipes, addRecipe, deleteRecipe, getTieredRecipes, mounted };
+  return { recipes: sortedRecipes, addRecipe, updateRecipe, deleteRecipe, getTieredRecipes, mounted };
 }

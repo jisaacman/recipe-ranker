@@ -5,6 +5,7 @@ import { Recipe } from "@/types/recipe";
 interface Props {
   recipe: Recipe;
   rank: number;
+  onSelect: (recipe: Recipe) => void;
   onDelete: (id: string) => void;
 }
 
@@ -29,7 +30,7 @@ function safeHostname(url: string): string {
   }
 }
 
-export default function RecipeCard({ recipe, rank, onDelete }: Props) {
+export default function RecipeCard({ recipe, rank, onSelect, onDelete }: Props) {
   const isUrl =
     recipe.source.startsWith("http://") ||
     recipe.source.startsWith("https://");
@@ -38,7 +39,10 @@ export default function RecipeCard({ recipe, rank, onDelete }: Props) {
     CATEGORY_COLORS[recipe.category] ?? "bg-stone-100 text-stone-500";
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-100 p-4 flex items-center gap-3 group">
+    <div
+      onClick={() => onSelect(recipe)}
+      className="bg-white rounded-2xl border border-stone-100 p-4 flex items-center gap-3 cursor-pointer hover:border-stone-200 hover:shadow-sm transition-all"
+    >
       {/* Rank */}
       <span className="text-lg font-bold text-stone-200 w-6 text-center shrink-0 select-none">
         {rank}
@@ -59,14 +63,9 @@ export default function RecipeCard({ recipe, rank, onDelete }: Props) {
           )}
           {recipe.source &&
             (isUrl ? (
-              <a
-                href={recipe.source}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-400 hover:underline truncate max-w-[140px]"
-              >
+              <span className="text-xs text-blue-400 truncate max-w-[140px]">
                 {safeHostname(recipe.source)}
-              </a>
+              </span>
             ) : (
               <span className="text-xs text-stone-400 truncate">
                 {recipe.source}
@@ -74,11 +73,21 @@ export default function RecipeCard({ recipe, rank, onDelete }: Props) {
             ))}
         </div>
 
-        <span
-          className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}
-        >
-          {recipe.category}
-        </span>
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}
+          >
+            {recipe.category}
+          </span>
+          {recipe.timesMade > 0 && (
+            <span className="text-xs text-stone-400">
+              Made {recipe.timesMade}×
+            </span>
+          )}
+          {recipe.notes && (
+            <span className="text-xs text-stone-300">· has notes</span>
+          )}
+        </div>
       </div>
 
       {/* Score badge */}
@@ -88,9 +97,12 @@ export default function RecipeCard({ recipe, rank, onDelete }: Props) {
         {recipe.rating}
       </div>
 
-      {/* Delete — always visible but subtle */}
+      {/* Delete — stopPropagation so it doesn't open the detail modal */}
       <button
-        onClick={() => onDelete(recipe.id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(recipe.id);
+        }}
         title="Remove"
         className="text-stone-200 hover:text-rose-400 transition-colors text-xl leading-none shrink-0"
       >
