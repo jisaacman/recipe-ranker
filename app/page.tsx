@@ -49,7 +49,7 @@ export default function Home() {
       : null;
 
   return (
-    <main className="min-h-screen bg-stone-50">
+    <main className="min-h-screen bg-stone-50 pb-24">
       <div className="max-w-lg mx-auto px-4 py-10">
 
         {/* Header */}
