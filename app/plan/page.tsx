@@ -158,7 +158,7 @@ export default function PlanPage() {
                               {recipe.name}
                             </span>
 
-                            {slot.cooked ? (
+                            {slot?.cooked ? (
                               <span className="text-xs font-medium text-emerald-500 shrink-0">
                                 Cooked
                               </span>
