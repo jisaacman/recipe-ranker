@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const TABS = [
+type Tab = { href: string; label: string; icon: React.ReactNode };
+
+const TABS: Tab[] = [
   {
     href: "/",
     label: "Rankings",
-    // Simple list icon
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
         <line x1="4" y1="6" x2="16" y2="6" />
@@ -19,7 +20,6 @@ const TABS = [
   {
     href: "/plan",
     label: "Plan",
-    // Simple calendar icon
     icon: (
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="14" height="13" rx="2" />
@@ -29,7 +29,7 @@ const TABS = [
       </svg>
     ),
   },
-] as const;
+];
 
 export default function NavBar() {
   const pathname = usePathname();
