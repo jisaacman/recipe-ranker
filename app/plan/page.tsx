@@ -5,6 +5,7 @@ import { useRecipes } from "@/hooks/useRecipes";
 import { useMealPlan } from "@/hooks/useMealPlan";
 import { CATEGORIES } from "@/types/recipe";
 import RecipePicker from "@/components/RecipePicker";
+import GroceryList from "@/components/GroceryList";
 
 interface PickerState {
   dateStr: string;
@@ -56,12 +57,25 @@ export default function PlanPage() {
   const { getSlot, assignRecipe, removeSlot, markCooked, mounted: planMounted } =
     useMealPlan();
   const [picker, setPicker] = useState<PickerState | null>(null);
+  const [showGroceryList, setShowGroceryList] = useState(false);
 
   const weekDays = getWeekDays();
   const mounted = recipesMounted && planMounted;
 
   // Week range label
   const weekLabel = `${weekDays[0].shortDate} – ${weekDays[6].shortDate}`;
+
+  // Unique recipes planned this week (for grocery list)
+  const plannedRecipes = mounted
+    ? weekDays.flatMap(({ dateStr }) =>
+        CATEGORIES.flatMap((category) => {
+          const slot = getSlot(dateStr, category);
+          if (!slot) return [];
+          const recipe = recipes.find((r) => r.id === slot.recipeId);
+          return recipe ? [{ name: recipe.name, category: recipe.category, author: recipe.author }] : [];
+        })
+      ).filter((r, i, arr) => arr.findIndex((x) => x.name === r.name) === i)
+    : [];
 
   const handlePick = (recipeId: string) => {
     if (!picker) return;
@@ -79,11 +93,21 @@ export default function PlanPage() {
     <main className="min-h-screen bg-stone-50 pb-24">
       <div className="max-w-lg mx-auto px-4 py-10">
 
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900">
-            Week Planner
-          </h1>
-          <p className="text-sm text-stone-400 mt-1">{weekLabel}</p>
+        <header className="mb-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-stone-900">
+              Week Planner
+            </h1>
+            <p className="text-sm text-stone-400 mt-1">{weekLabel}</p>
+          </div>
+          {mounted && plannedRecipes.length > 0 && (
+            <button
+              onClick={() => setShowGroceryList(true)}
+              className="mt-1 text-sm font-medium text-stone-600 border border-stone-200 rounded-xl px-3 py-1.5 hover:bg-stone-100 transition-colors shrink-0"
+            >
+              Grocery list
+            </button>
+          )}
         </header>
 
         {!mounted ? null : recipes.length === 0 ? (
@@ -207,6 +231,13 @@ export default function PlanPage() {
           slotLabel={`${picker.dayName} · ${picker.category}`}
           onPick={(recipe) => handlePick(recipe.id)}
           onClose={() => setPicker(null)}
+        />
+      )}
+
+      {showGroceryList && (
+        <GroceryList
+          recipes={plannedRecipes}
+          onClose={() => setShowGroceryList(false)}
         />
       )}
     </main>
