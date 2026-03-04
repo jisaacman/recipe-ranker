@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     try {
       const res = await fetch(body.url, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Accept": "text/html,application/xhtml+xml",
         },
       });
@@ -31,21 +31,24 @@ export async function POST(req: NextRequest) {
 
     // Primary: parse JSON-LD structured data (works on AllRecipes, Food Network,
     // Epicurious, Serious Eats, NYT Cooking, etc.)
-    const jsonLdBlocks = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) ?? [];
+    const jsonLdBlocks = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) ?? [];
     for (const block of jsonLdBlocks) {
       try {
         const content = block.replace(/<script[^>]*>/i, "").replace(/<\/script>/i, "");
         const parsed = JSON.parse(content);
         const schemas = Array.isArray(parsed) ? parsed : [parsed];
         for (const schema of schemas) {
+          const isRecipe = (type: unknown) =>
+            type === "Recipe" || (Array.isArray(type) && type.includes("Recipe"));
+
           // Direct Recipe schema
-          if (schema["@type"] === "Recipe" && Array.isArray(schema.recipeIngredient)) {
+          if (isRecipe(schema["@type"]) && Array.isArray(schema.recipeIngredient)) {
             return NextResponse.json({ ingredients: schema.recipeIngredient });
           }
           // @graph containing Recipe
           if (Array.isArray(schema["@graph"])) {
             for (const item of schema["@graph"]) {
-              if (item["@type"] === "Recipe" && Array.isArray(item.recipeIngredient)) {
+              if (isRecipe(item["@type"]) && Array.isArray(item.recipeIngredient)) {
                 return NextResponse.json({ ingredients: item.recipeIngredient });
               }
             }
