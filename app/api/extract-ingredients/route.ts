@@ -59,15 +59,32 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fallback: ask Claude to extract from HTML
-    const trimmed = html.slice(0, 60000);
+    // Fallback 1: ask Claude to extract from the raw HTML
+    let pageText = html.slice(0, 60000);
+
+    // Fallback 2: if the page looks blocked (short/empty HTML or no recipe content),
+    // try Jina Reader which handles bot-protected sites and JS-rendered pages
+    if (html.length < 5000 || !html.includes("ingredient")) {
+      try {
+        const jinaRes = await fetch(`https://r.jina.ai/${body.url}`, {
+          headers: { "Accept": "text/plain", "X-Return-Format": "text" },
+        });
+        const jinaText = await jinaRes.text();
+        if (jinaText.length > 500) {
+          pageText = jinaText.slice(0, 60000);
+        }
+      } catch {
+        // Jina unavailable, proceed with original HTML
+      }
+    }
+
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       messages: [
         {
           role: "user",
-          content: `Extract the ingredients list from this recipe page HTML. Return ONLY valid JSON with no markdown:\n{"ingredients":["1 cup flour","2 eggs"]}\nIf no ingredients found, return {"ingredients":[]}.\n\nHTML:\n${trimmed}`,
+          content: `Extract the ingredients list from this recipe page content. Return ONLY valid JSON with no markdown:\n{"ingredients":["1 cup flour","2 eggs"]}\nIf no ingredients found, return {"ingredients":[]}.\n\nContent:\n${pageText}`,
         },
       ],
     });
