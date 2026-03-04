@@ -100,7 +100,10 @@ export default function Home() {
         state={state}
         currentComparison={currentComparison}
         comparisonsLeft={comparisonsLeft}
-        onChooseTier={(tier) => chooseTier(tier, getTieredRecipes(tier))}
+        onChooseTier={(tier) => {
+          const category = state.phase === "choosing-tier" ? state.pending.category : "";
+          chooseTier(tier, getTieredRecipes(tier, category));
+        }}
         onPick={pick}
         onPickTie={pickTie}
         onCancel={cancel}

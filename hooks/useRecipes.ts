@@ -6,7 +6,7 @@ import { Recipe } from "@/types/recipe";
 const STORAGE_KEY = "recipe-ranker";
 
 function recalculateScores(recipes: Recipe[]): Recipe[] {
-  const score = (group: Recipe[], max: number, min: number): Recipe[] =>
+  const scoreGroup = (group: Recipe[], max: number, min: number): Recipe[] =>
     group.map((r, i) => ({
       ...r,
       rating:
@@ -15,15 +15,21 @@ function recalculateScores(recipes: Recipe[]): Recipe[] {
           : parseFloat((max - (i / (group.length - 1)) * (max - min)).toFixed(1)),
     }));
 
-  const liked = recipes
-    .filter((r) => r.tier === "liked")
-    .sort((a, b) => a.rankInTier - b.rankInTier);
+  // Group by tier + category so each category is scored independently
+  const groups = new Map<string, Recipe[]>();
+  for (const r of recipes) {
+    const key = `${r.tier}::${r.category}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(r);
+  }
 
-  const disliked = recipes
-    .filter((r) => r.tier === "disliked")
-    .sort((a, b) => a.rankInTier - b.rankInTier);
-
-  return [...score(liked, 10, 6), ...score(disliked, 5, 1)];
+  const result: Recipe[] = [];
+  for (const [key, group] of groups) {
+    const tier = key.split("::")[0] as "liked" | "disliked";
+    const sorted = [...group].sort((a, b) => a.rankInTier - b.rankInTier);
+    result.push(...scoreGroup(sorted, tier === "liked" ? 10 : 5, tier === "liked" ? 6 : 1));
+  }
+  return result;
 }
 
 // Normalizes a raw parsed value into a Recipe, filling in defaults for any missing fields.
@@ -93,7 +99,7 @@ export function useRecipes() {
       const newId = existingId ?? crypto.randomUUID();
 
       const shifted = prev.map((r) =>
-        r.tier === data.tier && r.rankInTier >= position
+        r.tier === data.tier && r.category === data.category && r.rankInTier >= position
           ? { ...r, rankInTier: r.rankInTier + 1 }
           : r
       );
@@ -137,7 +143,7 @@ export function useRecipes() {
       const updated = prev
         .filter((r) => r.id !== id)
         .map((r) =>
-          r.tier === target.tier && r.rankInTier > target.rankInTier
+          r.tier === target.tier && r.category === target.category && r.rankInTier > target.rankInTier
             ? { ...r, rankInTier: r.rankInTier - 1 }
             : r
         );
@@ -145,9 +151,9 @@ export function useRecipes() {
     });
   };
 
-  const getTieredRecipes = (tier: "liked" | "disliked") =>
+  const getTieredRecipes = (tier: "liked" | "disliked", category: string) =>
     recipes
-      .filter((r) => r.tier === tier)
+      .filter((r) => r.tier === tier && r.category === category)
       .sort((a, b) => a.rankInTier - b.rankInTier);
 
   const sortedRecipes = [...recipes].sort((a, b) => b.rating - a.rating);

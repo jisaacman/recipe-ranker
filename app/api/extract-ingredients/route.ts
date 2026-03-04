@@ -19,21 +19,52 @@ export async function POST(req: NextRequest) {
     let html = "";
     try {
       const res = await fetch(body.url, {
-        headers: { "User-Agent": "Mozilla/5.0" },
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)",
+          "Accept": "text/html,application/xhtml+xml",
+        },
       });
       html = await res.text();
-      html = html.slice(0, 60000);
     } catch {
       return NextResponse.json({ error: "Could not fetch URL" }, { status: 400 });
     }
 
+    // Primary: parse JSON-LD structured data (works on AllRecipes, Food Network,
+    // Epicurious, Serious Eats, NYT Cooking, etc.)
+    const jsonLdBlocks = html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) ?? [];
+    for (const block of jsonLdBlocks) {
+      try {
+        const content = block.replace(/<script[^>]*>/i, "").replace(/<\/script>/i, "");
+        const parsed = JSON.parse(content);
+        const schemas = Array.isArray(parsed) ? parsed : [parsed];
+        for (const schema of schemas) {
+          // Direct Recipe schema
+          if (schema["@type"] === "Recipe" && Array.isArray(schema.recipeIngredient)) {
+            return NextResponse.json({ ingredients: schema.recipeIngredient });
+          }
+          // @graph containing Recipe
+          if (Array.isArray(schema["@graph"])) {
+            for (const item of schema["@graph"]) {
+              if (item["@type"] === "Recipe" && Array.isArray(item.recipeIngredient)) {
+                return NextResponse.json({ ingredients: item.recipeIngredient });
+              }
+            }
+          }
+        }
+      } catch {
+        // malformed JSON-LD, skip
+      }
+    }
+
+    // Fallback: ask Claude to extract from HTML
+    const trimmed = html.slice(0, 60000);
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 1024,
       messages: [
         {
           role: "user",
-          content: `Extract the ingredients list from this recipe page HTML. Return ONLY valid JSON with no markdown:\n{"ingredients":["1 cup flour","2 eggs"]}\nIf no ingredients found, return {"ingredients":[]}.\n\nHTML:\n${html}`,
+          content: `Extract the ingredients list from this recipe page HTML. Return ONLY valid JSON with no markdown:\n{"ingredients":["1 cup flour","2 eggs"]}\nIf no ingredients found, return {"ingredients":[]}.\n\nHTML:\n${trimmed}`,
         },
       ],
     });
