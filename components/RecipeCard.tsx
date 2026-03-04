@@ -44,7 +44,7 @@ export default function RecipeCard({ recipe, rank, onSelect, onDelete }: Props) 
   return (
     <div
       onClick={() => onSelect(recipe)}
-      className="group relative bg-white rounded-2xl border border-stone-100 p-4 pl-5 flex items-center gap-3 cursor-pointer hover:border-stone-200 hover:shadow-md transition-all overflow-hidden"
+      className="group relative bg-white rounded-2xl border border-stone-100 p-3 pl-4 flex items-center gap-2.5 cursor-pointer hover:border-stone-200 hover:shadow-md transition-all overflow-hidden"
     >
       {/* Tier accent stripe */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 ${tierStripe}`} />

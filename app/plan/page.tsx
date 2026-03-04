@@ -91,9 +91,9 @@ export default function PlanPage() {
 
   return (
     <main className="min-h-screen bg-stone-50 pb-24">
-      <div className="max-w-lg mx-auto px-4 py-10">
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-4">
 
-        <header className="mb-6 flex items-start justify-between">
+        <header className="mb-4 flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-stone-900">
               Week Planner

@@ -67,10 +67,10 @@ export default function RecipeList({ recipes, onSelect, onDelete }: Props) {
 
       {/* Recipe cards */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16 text-stone-400">
+        <div className="text-center py-10 text-stone-400">
           {recipes.length === 0 ? (
             <>
-              <p className="text-3xl mb-3">🍽️</p>
+              <p className="text-3xl mb-2">🍽️</p>
               <p className="text-sm font-medium text-stone-500">No recipes yet</p>
               <p className="text-xs mt-1 text-stone-300">Tap + to add your first recipe</p>
             </>
@@ -79,13 +79,13 @@ export default function RecipeList({ recipes, onSelect, onDelete }: Props) {
           )}
         </div>
       ) : hasBothTiers ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Liked section */}
           <div>
-            <p className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2 px-1">
+            <p className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-1.5 px-1">
               Liked
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5">
               {likedRecipes.map((recipe, i) => (
                 <li key={recipe.id}>
                   <RecipeCard
@@ -101,10 +101,10 @@ export default function RecipeList({ recipes, onSelect, onDelete }: Props) {
 
           {/* Disliked section */}
           <div>
-            <p className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2 px-1">
+            <p className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-1.5 px-1">
               Didn&apos;t like
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-1.5">
               {dislikedRecipes.map((recipe, i) => (
                 <li key={recipe.id}>
                   <RecipeCard
@@ -119,7 +119,7 @@ export default function RecipeList({ recipes, onSelect, onDelete }: Props) {
           </div>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {filtered.map((recipe, i) => (
             <li key={recipe.id}>
               <RecipeCard

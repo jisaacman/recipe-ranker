@@ -53,10 +53,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-stone-50 pb-24">
-      <div className="max-w-lg mx-auto px-4 py-10">
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-4">
 
         {/* Header */}
-        <header className="mb-6">
+        <header className="mb-4">
           <h1 className="text-2xl font-bold tracking-tight text-stone-900">
             My Recipes
           </h1>
@@ -67,18 +67,18 @@ export default function Home() {
 
         {/* Stats bar */}
         {mounted && recipes.length > 0 && (
-          <div className="flex items-center bg-white border border-stone-100 rounded-2xl mb-6 divide-x divide-stone-100 shadow-sm">
-            <div className="flex-1 text-center py-3">
-              <p className="text-xl font-bold text-emerald-500">{likedCount}</p>
-              <p className="text-xs text-stone-400 mt-0.5">Liked</p>
+          <div className="flex items-center bg-white border border-stone-100 rounded-2xl mb-4 divide-x divide-stone-100 shadow-sm">
+            <div className="flex-1 text-center py-2.5">
+              <p className="text-lg font-bold text-emerald-500">{likedCount}</p>
+              <p className="text-xs text-stone-400">Liked</p>
             </div>
-            <div className="flex-1 text-center py-3">
-              <p className="text-xl font-bold text-rose-400">{dislikedCount}</p>
-              <p className="text-xs text-stone-400 mt-0.5">Disliked</p>
+            <div className="flex-1 text-center py-2.5">
+              <p className="text-lg font-bold text-rose-400">{dislikedCount}</p>
+              <p className="text-xs text-stone-400">Disliked</p>
             </div>
-            <div className="flex-1 text-center py-3">
-              <p className="text-xl font-bold text-stone-700">{avgRating}</p>
-              <p className="text-xs text-stone-400 mt-0.5">Avg score</p>
+            <div className="flex-1 text-center py-2.5">
+              <p className="text-lg font-bold text-stone-700">{avgRating}</p>
+              <p className="text-xs text-stone-400">Avg score</p>
             </div>
           </div>
         )}
