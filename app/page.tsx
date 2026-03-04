@@ -30,6 +30,9 @@ export default function Home() {
       }
     );
 
+  // Add recipe form
+  const [formOpen, setFormOpen] = useState(false);
+
   // Detail modal
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedRecipe = recipes.find((r) => r.id === selectedId) ?? null;
@@ -54,11 +57,11 @@ export default function Home() {
 
         {/* Header */}
         <header className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900">
-            Recipe Ranker
+          <h1 className="text-2xl font-bold tracking-tight text-stone-900">
+            My Recipes
           </h1>
-          <p className="text-sm text-stone-400 mt-1">
-            Rate and rank your favorite recipes
+          <p className="text-sm text-stone-400 mt-0.5">
+            Ranked by taste
           </p>
         </header>
 
@@ -80,11 +83,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Add recipe */}
-        <div className="mb-6">
-          <RecipeForm onSubmit={start} />
-        </div>
-
         {/* Ranked list */}
         {mounted && (
           <RecipeList
@@ -94,6 +92,24 @@ export default function Home() {
           />
         )}
       </div>
+
+      {/* Floating action button — add recipe */}
+      {state.phase === "idle" && (
+        <button
+          onClick={() => setFormOpen(true)}
+          className="fixed bottom-20 right-4 w-14 h-14 bg-stone-900 text-white rounded-full shadow-lg flex items-center justify-center text-2xl font-light hover:bg-stone-700 hover:scale-105 active:scale-95 transition-all z-30"
+          title="Add a recipe"
+        >
+          +
+        </button>
+      )}
+
+      {/* Add recipe modal */}
+      <RecipeForm
+        isOpen={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSubmit={start}
+      />
 
       {/* Ranking flow overlay */}
       <RankingFlow

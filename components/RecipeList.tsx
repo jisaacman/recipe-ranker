@@ -20,6 +20,10 @@ export default function RecipeList({ recipes, onSelect, onDelete }: Props) {
   const filtered =
     filter === ALL ? recipes : recipes.filter((r) => r.category === filter);
 
+  const likedRecipes = filtered.filter((r) => r.tier === "liked");
+  const dislikedRecipes = filtered.filter((r) => r.tier === "disliked");
+  const hasBothTiers = likedRecipes.length > 0 && dislikedRecipes.length > 0;
+
   const countFor = (tab: Tab) =>
     tab === ALL
       ? recipes.length
@@ -63,20 +67,64 @@ export default function RecipeList({ recipes, onSelect, onDelete }: Props) {
 
       {/* Recipe cards */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-stone-400">
-          <p className="text-sm">
-            {recipes.length === 0
-              ? "No recipes yet — add your first one above."
-              : `No ${filter} recipes yet.`}
-          </p>
+        <div className="text-center py-16 text-stone-400">
+          {recipes.length === 0 ? (
+            <>
+              <p className="text-3xl mb-3">🍽️</p>
+              <p className="text-sm font-medium text-stone-500">No recipes yet</p>
+              <p className="text-xs mt-1 text-stone-300">Tap + to add your first recipe</p>
+            </>
+          ) : (
+            <p className="text-sm">No {filter} recipes yet.</p>
+          )}
+        </div>
+      ) : hasBothTiers ? (
+        <div className="space-y-4">
+          {/* Liked section */}
+          <div>
+            <p className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2 px-1">
+              Liked
+            </p>
+            <ul className="space-y-2">
+              {likedRecipes.map((recipe, i) => (
+                <li key={recipe.id}>
+                  <RecipeCard
+                    recipe={recipe}
+                    rank={i + 1}
+                    onSelect={onSelect}
+                    onDelete={onDelete}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Disliked section */}
+          <div>
+            <p className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2 px-1">
+              Didn&apos;t like
+            </p>
+            <ul className="space-y-2">
+              {dislikedRecipes.map((recipe, i) => (
+                <li key={recipe.id}>
+                  <RecipeCard
+                    recipe={recipe}
+                    rank={i + 1}
+                    onSelect={onSelect}
+                    onDelete={onDelete}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       ) : (
         <ul className="space-y-2">
-          {filtered.map((recipe, index) => (
+          {filtered.map((recipe, i) => (
             <li key={recipe.id}>
               <RecipeCard
                 recipe={recipe}
-                rank={index + 1}
+                rank={i + 1}
                 onSelect={onSelect}
                 onDelete={onDelete}
               />

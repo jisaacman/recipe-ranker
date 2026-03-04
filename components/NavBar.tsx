@@ -35,7 +35,7 @@ export default function NavBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-stone-100 z-40 safe-area-pb">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-stone-100 z-40">
       <div className="flex max-w-lg mx-auto">
         {TABS.map((tab) => {
           const active = pathname === tab.href;
@@ -43,10 +43,14 @@ export default function NavBar() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors ${
+              className={`flex-1 flex flex-col items-center gap-1 pt-2 pb-3 text-xs font-medium transition-colors relative ${
                 active ? "text-stone-900" : "text-stone-400 hover:text-stone-600"
               }`}
             >
+              {/* Active indicator bar */}
+              {active && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-stone-900 rounded-full" />
+              )}
               {tab.icon}
               {tab.label}
             </Link>

@@ -38,13 +38,19 @@ export default function RecipeCard({ recipe, rank, onSelect, onDelete }: Props) 
   const catColor =
     CATEGORY_COLORS[recipe.category] ?? "bg-stone-100 text-stone-500";
 
+  const tierStripe =
+    recipe.tier === "liked" ? "bg-emerald-400" : "bg-rose-400";
+
   return (
     <div
       onClick={() => onSelect(recipe)}
-      className="bg-white rounded-2xl border border-stone-100 p-4 flex items-center gap-3 cursor-pointer hover:border-stone-200 hover:shadow-sm transition-all"
+      className="group relative bg-white rounded-2xl border border-stone-100 p-4 pl-5 flex items-center gap-3 cursor-pointer hover:border-stone-200 hover:shadow-md transition-all overflow-hidden"
     >
+      {/* Tier accent stripe */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 ${tierStripe}`} />
+
       {/* Rank */}
-      <span className="text-lg font-bold text-stone-200 w-6 text-center shrink-0 select-none">
+      <span className="text-xs font-bold text-stone-300 w-5 text-center shrink-0 select-none tabular-nums">
         {rank}
       </span>
 
@@ -54,29 +60,29 @@ export default function RecipeCard({ recipe, rank, onSelect, onDelete }: Props) 
           {recipe.name}
         </p>
 
-        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-          {recipe.author && (
-            <span className="text-xs text-stone-400">{recipe.author}</span>
-          )}
-          {recipe.author && recipe.source && (
-            <span className="text-stone-200 text-xs">·</span>
-          )}
-          {recipe.source &&
-            (isUrl ? (
-              <span className="text-xs text-blue-400 truncate max-w-[140px]">
-                {safeHostname(recipe.source)}
-              </span>
-            ) : (
-              <span className="text-xs text-stone-400 truncate">
-                {recipe.source}
-              </span>
-            ))}
-        </div>
+        {(recipe.author || recipe.source) && (
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {recipe.author && (
+              <span className="text-xs text-stone-400">{recipe.author}</span>
+            )}
+            {recipe.author && recipe.source && (
+              <span className="text-stone-200 text-xs">·</span>
+            )}
+            {recipe.source &&
+              (isUrl ? (
+                <span className="text-xs text-blue-400 truncate max-w-[140px]">
+                  {safeHostname(recipe.source)}
+                </span>
+              ) : (
+                <span className="text-xs text-stone-400 truncate max-w-[140px]">
+                  {recipe.source}
+                </span>
+              ))}
+          </div>
+        )}
 
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
-          <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}
-          >
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${catColor}`}>
             {recipe.category}
           </span>
           {recipe.timesMade > 0 && (
@@ -92,19 +98,19 @@ export default function RecipeCard({ recipe, rank, onSelect, onDelete }: Props) 
 
       {/* Score badge */}
       <div
-        className={`w-11 h-11 rounded-full ${ratingBg(recipe.rating)} text-white font-bold text-base flex items-center justify-center shrink-0 shadow-sm`}
+        className={`w-11 h-11 rounded-full ${ratingBg(recipe.rating)} text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm`}
       >
         {recipe.rating}
       </div>
 
-      {/* Delete — stopPropagation so it doesn't open the detail modal */}
+      {/* Delete — only visible on hover */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onDelete(recipe.id);
         }}
         title="Remove"
-        className="text-stone-200 hover:text-rose-400 transition-colors text-xl leading-none shrink-0"
+        className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-rose-400 transition-all text-xl leading-none shrink-0"
       >
         ×
       </button>
