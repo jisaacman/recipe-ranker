@@ -52,6 +52,7 @@ function normalizeRecipe(r: unknown): Recipe | null {
     rating: raw.rating ?? 0,
     notes: raw.notes ?? "",
     timesMade: raw.timesMade ?? 0,
+    ingredients: Array.isArray(raw.ingredients) ? raw.ingredients : [],
   };
 }
 
@@ -101,6 +102,7 @@ export function useRecipes() {
         id: newId,
         rankInTier: position,
         rating: 0,
+        ingredients: [],
       };
 
       let result = recalculateScores([...shifted, newRecipe]);
@@ -123,7 +125,7 @@ export function useRecipes() {
   // Edit notes, times made, or category without affecting ranking
   const updateRecipe = (
     id: string,
-    updates: Partial<Pick<Recipe, "notes" | "timesMade" | "category">>
+    updates: Partial<Pick<Recipe, "notes" | "timesMade" | "category" | "ingredients">>
   ) => {
     setRecipes((prev) => prev.map((r) => (r.id === id ? { ...r, ...updates } : r)));
   };

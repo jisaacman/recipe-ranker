@@ -9,6 +9,7 @@ export interface Recipe {
   rating: number;     // computed score: liked → 6–10, disliked → 1–5
   notes: string;
   timesMade: number;
+  ingredients: string[];
 }
 
 // Only the fields the user fills in before ranking — excludes all computed/post-ranking fields

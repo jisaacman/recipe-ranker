@@ -72,7 +72,7 @@ export default function PlanPage() {
           const slot = getSlot(dateStr, category);
           if (!slot) return [];
           const recipe = recipes.find((r) => r.id === slot.recipeId);
-          return recipe ? [{ name: recipe.name, category: recipe.category, author: recipe.author }] : [];
+          return recipe ? [{ name: recipe.name, category: recipe.category, author: recipe.author, ingredients: recipe.ingredients }] : [];
         })
       ).filter((r, i, arr) => arr.findIndex((x) => x.name === r.name) === i)
     : [];

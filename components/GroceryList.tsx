@@ -6,6 +6,7 @@ interface RecipeInput {
   name: string;
   category: string;
   author?: string;
+  ingredients?: string[];
 }
 
 interface GrocerySection {
