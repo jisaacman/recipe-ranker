@@ -38,6 +38,9 @@ export default function RecipeDetail({
   const [ingredients, setIngredients] = useState<string[]>(recipe.ingredients);
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [urlInput, setUrlInput] = useState(
+    recipe.source.startsWith("http") ? recipe.source : ""
+  );
 
   const isDirty =
     notes !== recipe.notes ||
@@ -54,14 +57,19 @@ export default function RecipeDetail({
     recipe.source.startsWith("http://") ||
     recipe.source.startsWith("https://");
 
-  const fetchFromUrl = async () => {
+  // isUrl is used in the source link display below
+  const fetchFromUrl = async (url: string) => {
+    if (!url.startsWith("http")) {
+      setFetchError("Please enter a valid URL starting with http.");
+      return;
+    }
     setFetching(true);
     setFetchError(null);
     try {
       const res = await fetch("/api/extract-ingredients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: recipe.source }),
+        body: JSON.stringify({ url }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -213,35 +221,48 @@ export default function RecipeDetail({
 
           {/* Ingredients */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide">
-                Ingredients
-              </label>
-              <div className="flex items-center gap-3">
-                {isUrl && (
-                  <button
-                    onClick={fetchFromUrl}
-                    disabled={fetching}
-                    className="text-xs text-blue-400 hover:text-blue-500 transition-colors disabled:opacity-40"
-                  >
-                    {fetching ? "Reading..." : "Fetch from URL"}
-                  </button>
-                )}
-                <label className={`text-xs text-stone-400 hover:text-stone-600 cursor-pointer transition-colors ${fetching ? "opacity-40 pointer-events-none" : ""}`}>
-                  Upload photo
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    className="hidden"
-                    onChange={handlePhotoUpload}
-                    disabled={fetching}
-                  />
-                </label>
-              </div>
+            <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide block mb-2">
+              Ingredients
+            </label>
+
+            {/* URL input */}
+            <div className="flex gap-2 mb-3">
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                placeholder="Paste recipe URL..."
+                className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-200 placeholder:text-stone-300"
+                disabled={fetching}
+              />
+              <button
+                onClick={() => fetchFromUrl(urlInput)}
+                disabled={fetching || !urlInput}
+                className="text-sm font-medium text-stone-600 border border-stone-200 rounded-xl px-3 py-2 hover:bg-stone-50 transition-colors disabled:opacity-40 shrink-0"
+              >
+                {fetching ? "Reading..." : "Fetch"}
+              </button>
             </div>
 
+            {/* Photo upload */}
+            <label className={`flex items-center gap-2 text-sm text-stone-400 hover:text-stone-600 cursor-pointer transition-colors mb-3 ${fetching ? "opacity-40 pointer-events-none" : ""}`}>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="3" width="13" height="10" rx="1.5" />
+                <circle cx="7.5" cy="8" r="2.5" />
+                <path d="M5 3l1-2h3l1 2" />
+              </svg>
+              Upload a photo of the recipe
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handlePhotoUpload}
+                disabled={fetching}
+              />
+            </label>
+
             {fetching && (
-              <div className="flex items-center gap-2 py-3 text-stone-400">
+              <div className="flex items-center gap-2 py-2 text-stone-400">
                 <div className="w-4 h-4 border-2 border-stone-200 border-t-stone-500 rounded-full animate-spin" />
                 <span className="text-xs">Reading ingredients...</span>
               </div>
@@ -251,8 +272,8 @@ export default function RecipeDetail({
               <p className="text-xs text-rose-400 mb-2">{fetchError}</p>
             )}
 
-            {!fetching && ingredients.length > 0 ? (
-              <ul className="space-y-1.5">
+            {!fetching && ingredients.length > 0 && (
+              <ul className="space-y-1.5 mt-1">
                 {ingredients.map((ing, i) => (
                   <li key={i} className="text-sm text-stone-700 flex items-start gap-2">
                     <span className="text-stone-300 shrink-0 mt-0.5">·</span>
@@ -260,13 +281,7 @@ export default function RecipeDetail({
                   </li>
                 ))}
               </ul>
-            ) : !fetching && !fetchError ? (
-              <p className="text-sm text-stone-300">
-                {isUrl
-                  ? "Tap \"Fetch from URL\" to import ingredients automatically, or upload a photo."
-                  : "Upload a photo of the recipe to import ingredients."}
-              </p>
-            ) : null}
+            )}
           </div>
 
           {/* Save */}
